@@ -16,25 +16,25 @@
 org	10000h
 	jmp	Label_Start
 
-%include	"fat12.inc"
+%include	"fat12.inc"							;通过include关键字可将文件fat12.inc的内容包含进loader.asm文件中
 
 BaseOfKernelFile	equ	0x00
-OffsetOfKernelFile	equ	0x100000
-
-BaseTmpOfKernelAddr	equ	0x00
-OffsetTmpOfKernelFile	equ	0x7E00
-
-MemoryStructBufferAddr	equ	0x7E00
+OffsetOfKernelFile	equ	0x100000				;内核起始物理地址0x100000(1MB),因为1MB以下的物理地址并不全是可用的地址空间,这段物理地址被分为若干段子空间,它们可以是内存空间,非内存空间以及地址空洞
+												;随着内核体积的不断增长,未来的内核程序很可能超过1MB,所以让内核程序跳过这些复杂的内存空间,从平坦的1MB开始
+BaseTmpOfKernelAddr		equ	0x00
+OffsetTmpOfKernelFile	equ	0x7E00				;内核程序的临时转存空间,由于内核程序的读取操作是通过BIOS中断INT 13h实现的,BIOS在实模式下只支持上限为1MB的物理地址空间寻址,所以必须先将内核程序读入临时转存空间
+												;然后再通过特殊方式搬运到1MB以上的内存空间,当内核程序被转存到最终内存空间后,这个临时转存空间就可另作他用,此处将其改为内存结构数据的存储空间
+MemoryStructBufferAddr	equ	0x7E00				;供内核程序初始化时使用
 
 [SECTION gdt]
 
-LABEL_GDT:		dd	0,0
+LABEL_GDT:			dd	0,0
 LABEL_DESC_CODE32:	dd	0x0000FFFF,0x00CF9A00
 LABEL_DESC_DATA32:	dd	0x0000FFFF,0x00CF9200
 
 GdtLen	equ	$ - LABEL_GDT
 GdtPtr	dw	GdtLen - 1
-	dd	LABEL_GDT
+		dd	LABEL_GDT
 
 SelectorCode32	equ	LABEL_DESC_CODE32 - LABEL_GDT
 SelectorData32	equ	LABEL_DESC_DATA32 - LABEL_GDT
@@ -47,14 +47,14 @@ LABEL_DESC_DATA64:	dq	0x0000920000000000
 
 GdtLen64	equ	$ - LABEL_GDT64
 GdtPtr64	dw	GdtLen64 - 1
-		dd	LABEL_GDT64
+			dd	LABEL_GDT64
 
 SelectorCode64	equ	LABEL_DESC_CODE64 - LABEL_GDT64
 SelectorData64	equ	LABEL_DESC_DATA64 - LABEL_GDT64
 
-[SECTION .s16]
-[BITS 16]
-
+[SECTION .s16]	;定义段.s16
+[BITS 16]		;当NASM编译器处于16位宽(BITS 16)状态下,使用32位宽数据指令时需要在指令前加入前缀0x66,使用32位宽地址指令时需要在指令前加入前缀0x67
+				;而在32位宽(BITS 32)状态下,使用16位宽指令也需要加入指令前缀
 Label_Start:
 
 	mov	ax,	cs
@@ -74,34 +74,34 @@ Label_Start:
 	mov	ax,	ds
 	mov	es,	ax
 	pop	ax
-	mov	bp,	StartLoaderMessage
+	mov	bp,	StartLoaderMessage	;StartLoaderMessage:			db	"Start Loader"
 	int	10h
 
-;=======	open address A20
+;=======	open address A20,置位0x92端口的位1
 	push	ax
 	in	al,	92h
 	or	al,	00000010b
 	out	92h,	al
 	pop	ax
 
-	cli
+	cli		;关闭外部中断
 
 	db	0x66
-	lgdt	[GdtPtr]	
-
+	lgdt	[GdtPtr]	;加载GDT表到GDTR
+;置位CR0寄存器的的第0位来开启保护模式,进入保护模式,为FS段寄存器加载新的数据段值,一旦完成数据加载就从保护模式中退出,并开启外部中断,看似多此一举的代码,目的是为了让FS可以在实模式下寻址能力超过1MB,也就是Big Real Mode模式
 	mov	eax,	cr0
 	or	eax,	1
 	mov	cr0,	eax
-
-	mov	ax,	SelectorData32
+;
+	mov	ax,	SelectorData32	;
 	mov	fs,	ax
-	mov	eax,	cr0
+	mov	eax,	cr0			;关闭保护模式
 	and	al,	11111110b
 	mov	cr0,	eax
 
-	sti
-
-;=======	reset floppy
+	sti		;开启外部中断
+;此时FS的状态信息与其他段寄存器不同,特别是段基地址base=0x0000 0000和段限长limit=0x0xffff ffff,它的寻址能力已经从20位(1MB)扩展到32位(4GB)
+;=======	reset floppy	;这里需要注意的是在物理平台下,当段寄存器拥有这种特殊能力后,如果重新赋值会失去特殊能力,但Bochs放宽了检测条件,即使重新赋值依然拥有特殊能力
 
 	xor	ah,	ah
 	xor	dl,	dl
@@ -721,21 +721,21 @@ IDT_POINTER:
 
 ;=======	tmp variable
 
-RootDirSizeForLoop	dw	RootDirSectors
-SectorNo		dw	0
-Odd			db	0
+RootDirSizeForLoop		dw	RootDirSectors
+SectorNo				dw	0
+Odd						db	0
 OffsetOfKernelFileCount	dd	OffsetOfKernelFile
 
-DisplayPosition		dd	0
+DisplayPosition			dd	0
 
 ;=======	display messages
 
-StartLoaderMessage:	db	"Start Loader"
-NoLoaderMessage:	db	"ERROR:No KERNEL Found"
-KernelFileName:		db	"KERNEL  BIN",0
+StartLoaderMessage:			db	"Start Loader"
+NoLoaderMessage:			db	"ERROR:No KERNEL Found"
+KernelFileName:				db	"KERNEL  BIN",0
 StartGetMemStructMessage:	db	"Start Get Memory Struct."
-GetMemStructErrMessage:	db	"Get Memory Struct ERROR"
-GetMemStructOKMessage:	db	"Get Memory Struct SUCCESSFUL!"
+GetMemStructErrMessage:		db	"Get Memory Struct ERROR"
+GetMemStructOKMessage:		db	"Get Memory Struct SUCCESSFUL!"
 
 StartGetSVGAVBEInfoMessage:	db	"Start Get SVGA VBE Info"
 GetSVGAVBEInfoErrMessage:	db	"Get SVGA VBE Info ERROR"
@@ -744,3 +744,16 @@ GetSVGAVBEInfoOKMessage:	db	"Get SVGA VBE Info SUCCESSFUL!"
 StartGetSVGAModeInfoMessage:	db	"Start Get SVGA Mode Info"
 GetSVGAModeInfoErrMessage:	db	"Get SVGA Mode Info ERROR"
 GetSVGAModeInfoOKMessage:	db	"Get SVGA Mode Info SUCCESSFUL!"
+
+;以下是注释说明:
+;最初的处理器只有20根地址线,这使得处理器只能寻址1MB以内的物理地址空间,如果超过1MB范围的寻址操作,也只有低20位有效,随着处理器寻址能力的不断增强,20根地址线无法满足后续的开发要求
+;为了保证硬件平台的向后兼容性,便出现了一个控制开启或禁止1MB以上地址空间的开关,当时的8042键盘控制器上恰好有空闲的端口引脚(输出端口P2,引脚P21),从而使用此引脚作为功能控制开关,即A20功能
+;如果A20引脚为低电平0,那么只有低20位地址有效,其他位均为0,在机器上电时,默认A20是禁用的,所以操作系统必须采用适当的方法启用它,由于硬件平台的兼容设备种类繁杂,所以出现了多种开启A20的方法
+;1.开启A20的常用方法是操作键盘控制器,由于键盘控制器是低速设备,以至于功能开启速度相对较慢
+;2.A20快速门使用端口0x92来处理A20信号线,对于不含键盘控制器的操作系统,就只能使用0x92端口来控制,但是该端口有可能被其他设备使用
+;3.使用BIOS中断INT 15h的主功能号AX=2401可开启A20地址线,功能号AX=2400可禁用A20地址线,功能号AX=2403可查询A20地址线的当前状态
+;4.通过读0xee端口来开启A20信号线,而写该端口会禁止A20信号线
+;当A20功能开启后,紧接着使用指令CLI关闭外部中断,再通过指令LGDT加载保护模式结构数据信息,并置位CR0寄存器的第0位来开启保护模式
+;当进入保护模式后,为FS加载新的数据段值,一旦完成数据加载就从保护模式中退出,并开启外部中断,看似多此一举的代码,目的是为了让FS可以在实模式下寻址能力超过1MB,也就是Big Real Mode模式
+;此时FS的状态信息与其他段寄存器不同,特别是段基地址base=0x0000 0000和段限长limit=0x0xffff ffff,它的寻址能力已经从20位(1MB)扩展到32位(4GB)
+;这里需要注意的是在物理平台下,当段寄存器拥有这种特殊能力后,如果重新赋值会失去特殊能力,但Bochs放宽了检测条件,即使重新赋值依然拥有特殊能力

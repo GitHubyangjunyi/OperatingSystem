@@ -1,0 +1,11 @@
+当loader.asm程序编译完成后,必须将生成的二进制程序loader.bin复制进虚拟软盘镜像文件中boot.img中,此处的复制过程将不再是
+dd if=boot.bin of=boot.img bs=512 count=1 conv=notrunc
+因为当boot.bin程序写入到虚拟软盘镜像文件中boot.img后,虚拟软盘镜像文件boot.img已经拥有了FAT12文件系统
+应该借助挂载命令mount和复制命令cp将引导程序loader.bin复制到虚拟软盘镜像文件中boot.img中
+完整命令如下:
+    mount boot.img /media/ -t vfat -o loop
+    cp loader.bin /media/
+    sync
+    umount /media/
+参数/media/指定挂载目录,参数-t vfat指定文件系统类型,参数-o loop负责把一个文件描述成磁盘分区
+sync磁盘强制同步命令
