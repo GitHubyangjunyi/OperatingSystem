@@ -27,9 +27,9 @@ Label_Start:
 
 ;=======	clear screen
 ;INT 10h,AH=06h功能:按指定范围滚动窗口,具备清屏功能
-	mov	ax,	0600h			;AL=滚动的列数,若为0则执行清屏功能(此时BX/CX/DX的参数不起作用)
+	mov	ax,	0600h			;AL=滚动的行数(应该是行数),若为0则执行清屏功能(此时BX/CX/DX的参数不起作用)
 	mov	bx,	0700h			;BH=颜色属性
-	mov	cx,	0				;CH=左下角坐标列号CL=左下角坐标行号
+	mov	cx,	0				;CH=左上角坐标列号CL=左上角坐标行号
 	mov	dx,	0184fh			;DH=右下角坐标列号DL=右下角坐标行号
 	int	10h
 

@@ -28,7 +28,7 @@ SectorBalance			equ	17
 	jmp	short Label_Start				;生成两个字节的机器码
 	nop									;nop生成一个字节的机器码
 	BS_OEMName		db	'MINEboot'		;生产厂商名(长度必须为8字节)
-	BPB_BytesPerSec	dw	512				;每扇区字节数=512(长度16字节),簇越大那么分区的容量也就越大,通过增加簇的扇区数,可以支持更大的磁盘分区,标准的簇大小为1、2、4、8、16、32、64和128,FAT12格式下只能管理2^12个簇(4096),所以在FAT12格式下能管理和分配的最大空间为4096*1*512=2097152B=2M,所以FAT12一般只适合3.5寸高密度软盘1.44M
+	BPB_BytesPerSec	dw	512				;每扇区字节数=512(长度2字节),簇越大那么分区的容量也就越大,通过增加簇的扇区数,可以支持更大的磁盘分区,标准的簇大小为1、2、4、8、16、32、64和128,FAT12格式下只能管理2^12个簇(4096),所以在FAT12格式下能管理和分配的最大空间为4096*1*512=2097152B=2M,所以FAT12一般只适合3.5寸高密度软盘1.44M
 	BPB_SecPerClus	db	1				;每簇扇区数=1,由于每个扇区的容量只有512字节,过小的扇区容量可能导致读写频繁而引入簇,簇将2的整数次方个扇区作为一个"原子"数据存储单位,每个簇的长度为BPB_SecPerClus*BPB_BytesPerSec=512
 	BPB_RsvdSecCnt	dw	1				;保留扇区数=1,此阈值不能为0,保留扇区起始于FAT12文件系统的第一个扇区,对于FAT12而言此值必须为1,也就意味着引导扇区包含在保留扇区内,所以FAT表从软盘的第二个扇区开始
 	BPB_NumFATs		db	2				;FAT表的份数=2,设置为2主要是为了给FAT表准备一个备份表,因此FAT表1和表2内的数据是一样的
@@ -57,9 +57,9 @@ Label_Start:
 
 ;=======	clear screen
 ;INT 10h,AH=06h功能:按指定范围滚动窗口,具备清屏功能
-	mov	ax,	0600h						;AL=滚动的列数,若为0则执行清屏功能(此时BX/CX/DX的参数不起作用)
+	mov	ax,	0600h						;AL=滚动的行数(应该是行数),若为0则执行清屏功能(此时BX/CX/DX的参数不起作用)
 	mov	bx,	0700h						;BH=颜色属性
-	mov	cx,	0							;CH=左下角坐标列号CL=左下角坐标行号
+	mov	cx,	0							;CH=左上角坐标列号CL=左上角坐标行号
 	mov	dx,	0184fh						;DH=右下角坐标列号DL=右下角坐标行号
 	int	10h
 
@@ -283,8 +283,8 @@ Odd					db	0
 StartBootMessage:	db	"Start Boot"
 NoLoaderMessage:	db	"ERROR:No LOADER Found"
 LoaderFileName:		db	"LOADER  BIN",0
-
-;=======	fill zero until whole sector
+;特别注意:特别注意:特别注意:用户数据区的的第一个簇的序号是002,第二个簇的序号是003,虚拟软盘(从0开始)33扇区开始是用户数据区的第一个簇,由于loader.bin的文件名是小写,且系统不知道为什么将loader.bin文件存放在FAT[3]所指向的那个簇
+;=======	fill zero until whole sector	;也就是用户区的第二个簇,也就是虚拟软盘34扇区开始,而且34扇区前面还有loader.bin的小写文件名???
 
 	times	510 - ($ - $$)	db	0
 							dw	0xaa55
