@@ -23,8 +23,8 @@ OffsetOfLoader	equ	0x00
 RootDirSectors			equ	14			;根目录占用的扇区数=14
 SectorNumOfRootDirStart	equ	19		  	;根目录的起始扇区号=19
 SectorNumOfFAT1Start	equ	1		   	;FAT1表的起始扇区号=1
-SectorBalance			equ	17
-
+SectorBalance			equ	17			;用于平衡文件或者目录的起始簇号与数据区起始簇号的差值,通俗地说,因为数据区对应的有效簇号是2(FAT[2]),为了正确计算出FAT表项对应的数据区起始扇区号
+;则必须将FAT表项减去2,或者将数据区的起始簇号/扇区号减去2(仅在每簇由一个扇区组成时可用),本程序采取的一种取巧的方法是将根目录起始扇区号减去2等于17,进而间接把数据区的起始扇区号减去2(数据区起始扇区号 = 根目录起始扇区号 + 根目录所占扇区数)
 	jmp	short Label_Start				;生成两个字节的机器码
 	nop									;nop生成一个字节的机器码
 	BS_OEMName		db	'MINEboot'		;生产厂商名(长度必须为8字节)
@@ -32,7 +32,7 @@ SectorBalance			equ	17
 	BPB_SecPerClus	db	1				;每簇扇区数=1,由于每个扇区的容量只有512字节,过小的扇区容量可能导致读写频繁而引入簇,簇将2的整数次方个扇区作为一个"原子"数据存储单位,每个簇的长度为BPB_SecPerClus*BPB_BytesPerSec=512
 	BPB_RsvdSecCnt	dw	1				;保留扇区数=1,此阈值不能为0,保留扇区起始于FAT12文件系统的第一个扇区,对于FAT12而言此值必须为1,也就意味着引导扇区包含在保留扇区内,所以FAT表从软盘的第二个扇区开始
 	BPB_NumFATs		db	2				;FAT表的份数=2,设置为2主要是为了给FAT表准备一个备份表,因此FAT表1和表2内的数据是一样的
-	BPB_RootEntCnt	dw	224				;根目录可容纳的目录项数=224,对于FAT12文件系统而言,这个数值乘以32必须是BPB_BytesPerSec的整数倍,224*32/512=14,能够储存在根目录下的最大文件(包含子目录)数量,默认为224,每个目录或文件名占用32B的空间,因此根目录的大小为224*32=7168B=7KB(14个扇区),如果使用长文件名的话,根目录文件数还可能无法达到224的数量
+	BPB_RootEntCnt	dw	224				;根目录可容纳的目录项数=224,对于FAT12文件系统而言,这个数值乘以32必须是BPB_BytesPerSec的偶数倍,224*32/512=14,能够储存在根目录下的最大文件(包含子目录)数量,默认为224,每个目录或文件名占用32B的空间,因此根目录的大小为224*32=7168B=7KB(14个扇区),如果使用长文件名的话,根目录文件数还可能无法达到224的数量
 	BPB_TotSec16	dw	2880			;总扇区数=2880,如果此磁盘的逻辑扇区总数大于2^16位(65536)的话,就设置此字段为0,然后使用偏移32处的双字来表示逻辑总扇区数
 	BPB_Media		db	0xf0			;介质描述符=0xF0,描述存储介质类型,使用0f0h表示3.5寸高密码软盘,用0f8h来表示硬盘,无论该字段写入了什么数值,都必须同时向FAT[0]的低字节写入相同的值
 	BPB_FATSz16		dw	9				;每FAT扇区数=0009,记录着FAT表占用的扇区数,FAT表1和表2拥有相同的容量,它们的容量均由此值记录,操作系统用这个字段和FAT表数量以及隐藏扇区数量来计算根目录所在的扇区,还可以根据最大根目录数来计算用户数据区从哪里开始,根目录扇区位置=FAT表数量*FAT表所占用的扇区数量+隐藏扇区数量
@@ -102,18 +102,18 @@ Lable_Search_In_Root_Dir_Begin:
 	mov	bx,	8000h	;一旦发现完全匹配的字符串,则跳转到Label_FileName_Found处执行,如果没有找到则执行其后的Label_No_LoaderBin模块
 	mov	ax,	[SectorNo]					;SectorNo	dw	0,第93行将其改成0x13(19)了
 	mov	cl,	1
-	call	Func_ReadOneSector
+	call	Func_ReadOneSector			;到这一步时,ax=19,cl=1,es=00,bx=8000h,这些将是Func_ReadOneSector的参数
 	mov	si,	LoaderFileName				;LoaderFileName:	db	"LOADER  BIN",0
 	mov	di,	8000h
 	cld
-	mov	dx,	10h
+	mov	dx,	10h							;每个扇区512字节,共16个目录项
 	
 Label_Search_For_LoaderBin:
 
 	cmp	dx,	0
 	jz	Label_Goto_Next_Sector_In_Root_Dir	;jz意思为ZF=1则转移
 	dec	dx
-	mov	cx,	11
+	mov	cx,	11							;文件名加后缀名共11字节
 
 Label_Cmp_FileName:
 
@@ -208,23 +208,24 @@ Func_ReadOneSector:;INT 13h,AH=02h功能:读取磁盘扇区
 	push	bp
 	mov	bp,	sp
 	sub	esp,	2
-	mov	byte	[bp - 2],	cl
-	push	bx
+	mov	byte	[bp - 2],	cl			;将要读入的扇区数量cl压栈保存
+	push	bx							;将要BX=>目标缓冲区起始地址压栈保存
 	mov	bl,	[BPB_SecPerTrk]				;BPB_SecPerTrk每磁道扇区数=18
 	div	bl
 	inc	ah								;INT 13h,AH=02h功能:读取磁盘扇区,下面是参数
 	mov	cl,	ah							;CL=扇区号1~63(bit 0~5),磁道号的高2位(bit 6~7,只对硬盘有效)
 	mov	dh,	al
-	shr	al,	1							;AL=读入的扇区数(必须非0),shr逻辑右移指令
+	shr	al,	1							;shr逻辑右移指令
 	mov	ch,	al							;CH=磁道号的低8位
-	and	dh,	1							;DH=磁头号
+	and	dh,	1							;DH=磁头号,之前传入dh的值是LBA除以每磁道扇区数的商,这里是要清掉高7位留下第0位,而且刚好磁头数是2,如果第0位是1,就用1磁头,是0就用0磁头
+
 	pop	bx								;ES:BX=>数据缓冲区
 	mov	dl,	[BS_DrvNum]					;DL=驱动器号(如果操作的是硬盘驱动器,bit 7必须被置位),BS_DrvNum	db	0
 Label_Go_On_Reading:
-	mov	ah,	2
-	mov	al,	byte	[bp - 2]
+	mov	ah,	2							;AH=02h功能
+	mov	al,	byte	[bp - 2]			;AL=读入的扇区数(必须非0)
 	int	13h
-	jc	Label_Go_On_Reading				;jc意思是CF=1则转移,CF进位标志位
+	jc	Label_Go_On_Reading				;jc意思是CF=1则转移,CF进位标志位,软盘有时忙,使用jc重复操作,出口参数CF＝0表示操作成功
 	add	esp,	2
 	pop	bp
 	ret

@@ -108,11 +108,11 @@ Label_Start:
 	int	13h								;DL=80H代表第一个硬盘驱动器,81H代表第二个硬盘驱动器
 ;上面的代码相当于重新初始化软盘驱动器,从而将软盘驱动器的磁头移动至默认位置
 ;=======	search kernel.bin
-	mov	word	[SectorNo],	SectorNumOfRootDirStart
+	mov	word	[SectorNo],	SectorNumOfRootDirStart	;SectorNumOfRootDirStart	equ	19
 
 Lable_Search_In_Root_Dir_Begin:
 
-	cmp	word	[RootDirSizeForLoop],	0
+	cmp	word	[RootDirSizeForLoop],	0			;RootDirSizeForLoop		dw	RootDirSectors		;RootDirSectors			equ	14
 	jz	Label_No_LoaderBin
 	dec	word	[RootDirSizeForLoop]	
 	mov	ax,	00h
@@ -124,14 +124,14 @@ Lable_Search_In_Root_Dir_Begin:
 	mov	si,	KernelFileName
 	mov	di,	8000h
 	cld
-	mov	dx,	10h
+	mov	dx,	10h										;每个扇区512字节,共16个目录项
 	
 Label_Search_For_LoaderBin:
 
 	cmp	dx,	0
 	jz	Label_Goto_Next_Sector_In_Root_Dir
 	dec	dx
-	mov	cx,	11
+	mov	cx,	11										;文件名加后缀名共11字节
 
 Label_Cmp_FileName:
 
@@ -721,7 +721,7 @@ IDT_POINTER:
 
 ;=======	tmp variable
 
-RootDirSizeForLoop		dw	RootDirSectors
+RootDirSizeForLoop		dw	RootDirSectors		;RootDirSectors			equ	14
 SectorNo				dw	0
 Odd						db	0
 OffsetOfKernelFileCount	dd	OffsetOfKernelFile
