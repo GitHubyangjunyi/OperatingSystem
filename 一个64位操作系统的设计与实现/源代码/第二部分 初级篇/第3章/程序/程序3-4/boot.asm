@@ -163,7 +163,7 @@ Label_No_LoaderBin:
 Label_FileName_Found:
 ;程序会先取得目录项DIR_FstClus字段的数值,并通过配置ES和BX来指定loader.bin程序在内存中的起始地址
 	mov	ax,	RootDirSectors				;RootDirSectors	equ	14		;根目录占用的扇区数
-	and	di,	0ffe0h	;再根据loader.bin程序的其实簇号计算出其对应的扇区号,为了增强人机交互效果,此处还使用BIOS中断服务INT 10h显示一个字符'.'
+	and	di,	0ffe0h	;再根据loader.bin程序的起始簇号计算出其对应的扇区号,为了增强人机交互效果,此处还使用BIOS中断服务INT 10h显示一个字符'.'
 	add	di,	01ah	;接着每读入一个扇区的数据就通过Func_GetFATEntry模块取得下一个FAT表项,并跳转至Label_Go_On_Loading_File处继续读入下一个簇的数据
 	mov	cx,	word	[es:di]
 	push	cx		;如此往复直至Func_GetFATEntry模块返回的FAT表项值是0fffh为止,当loader.bin文件的数据全部读入到内存中后,跳转至Label_File_Loaded处准备执行loader.bin程序
@@ -188,7 +188,7 @@ Label_Go_On_Loading_File:;这段代码使用了INT 10h的主功能号AH=0Eh在�
 	call	Func_ReadOneSector
 	pop	ax
 	call	Func_GetFATEntry
-	cmp	ax,	0fffh
+	cmp	ax,	0fffh						;文件的起始簇号在目录项偏移26处,到此已经读了起始簇号指向的一个扇区了,不存在少读一个扇区的问题
 	jz	Label_File_Loaded				;jz意思为ZF=1则转移
 	push	ax
 	mov	dx,	RootDirSectors				;RootDirSectors	equ	14	;根目录占用的扇区数
@@ -261,14 +261,14 @@ Label_Even:
 	call	Func_ReadOneSector
 	
 	pop	dx
-	add	bx,	dx
-	mov	ax,	[es:bx]
+	add	bx,	dx							;此时的dx为FAT表项在扇区中的偏移位置,注意,Intel处理器是小端字节序,所以下一条指令读出的正好是将错位还原好的FAT表项的两个字节
+	mov	ax,	[es:bx]						;ax16位,所以读入的FAT表项是有16位,而每个FAT12表项只有12位
 	cmp	byte	[Odd],	1
 	jnz	Label_Even_2					;jnz意思是ZF=0则转移
-	shr	ax,	4							;shr逻辑右移指令
+	shr	ax,	4							;shr逻辑右移指令(奇数项),也就是刚才读出的两个字节,如果是奇数项,则表示低4位是下一个FAT表项的值
 
 Label_Even_2:
-	and	ax,	0fffh
+	and	ax,	0fffh						;偶数项,则保留高4位
 	pop	bx
 	pop	es
 	ret

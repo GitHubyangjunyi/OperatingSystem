@@ -600,7 +600,7 @@ no_support:
 [BITS 16]
 
 Func_ReadOneSector:
-	
+;代码跟boot那边的完全一样
 	push	bp
 	mov	bp,	sp
 	sub	esp,	2
@@ -614,6 +614,7 @@ Func_ReadOneSector:
 	shr	al,	1
 	mov	ch,	al
 	and	dh,	1
+
 	pop	bx
 	mov	dl,	[BS_DrvNum]
 Label_Go_On_Reading:
@@ -626,7 +627,7 @@ Label_Go_On_Reading:
 	ret
 
 ;=======	get FAT Entry
-
+;整体的解析思想和代码跟boot那边的完全一样
 Func_GetFATEntry:
 
 	push	es

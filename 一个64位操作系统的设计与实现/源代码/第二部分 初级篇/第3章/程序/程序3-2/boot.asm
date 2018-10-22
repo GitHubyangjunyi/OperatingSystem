@@ -188,7 +188,7 @@ Label_Go_On_Loading_File:;这段代码使用了INT 10h的主功能号AH=0Eh在�
 	call	Func_ReadOneSector
 	pop	ax
 	call	Func_GetFATEntry
-	cmp	ax,	0fffh
+	cmp	ax,	0fffh						;文件的起始簇号在目录项偏移26处,到此已经读了起始簇号指向的一个扇区了,不存在少读一个扇区的问题
 	jz	Label_File_Loaded				;jz意思为ZF=1则转移
 	push	ax
 	mov	dx,	RootDirSectors				;RootDirSectors	equ	14	;根目录占用的扇区数
@@ -261,14 +261,14 @@ Label_Even:
 	call	Func_ReadOneSector
 	
 	pop	dx
-	add	bx,	dx
-	mov	ax,	[es:bx]
+	add	bx,	dx							;此时的dx为FAT表项在扇区中的偏移位置,注意,Intel处理器是小端字节序,所以下一条指令读出的正好是将错位还原好的FAT表项的两个字节
+	mov	ax,	[es:bx]						;ax16位,所以读入的FAT表项是有16位,而每个FAT12表项只有12位
 	cmp	byte	[Odd],	1
 	jnz	Label_Even_2					;jnz意思是ZF=0则转移
-	shr	ax,	4							;shr逻辑右移指令
+	shr	ax,	4							;shr逻辑右移指令(奇数项)
 
 Label_Even_2:
-	and	ax,	0fffh
+	and	ax,	0fffh						;偶数项
 	pop	bx
 	pop	es
 	ret
