@@ -48,19 +48,19 @@ extern unsigned char font_ascii[256][16];
 
 char buf[4096]={0};
 
-struct position
+struct position		//用于屏幕信息的结构体
 {
-	int XResolution;
+	int XResolution;//当前屏幕分辨率
 	int YResolution;
 
-	int XPosition;
+	int XPosition;	//字符光标所在位置
 	int YPosition;
 
-	int XCharSize;
+	int XCharSize;	//字符像素矩阵尺寸
 	int YCharSize;
 
-	unsigned int * FB_addr;
-	unsigned long FB_length;
+	unsigned int * FB_addr;//帧缓存区起始地址
+	unsigned long FB_length;//帧缓存区容量大小
 }Pos;
 
 
@@ -86,7 +86,9 @@ __asm__("divq %%rcx":"=a" (n),"=d" (__res):"0" (n),"1" (0),"c" (base)); \
 __res; })
 
 /*
-
+	do_div宏是一条内嵌汇编语句,借助div指令将整数值num除以进制规格base,在div汇编指令中,被除数由RDX:RAX组成,由于num变量是个8B的长整型变量,因此RDX被赋值为0,计算结果的余数部分即是digits数组的下标索引值
+	特别注意的是,如果将这行汇编语句改成__asm__("divq %4":"=a" (n),"=d" (__res):"0" (n),"1" (0),"c" (base));,在理论上是可行的,但在编译过程中会提示错误Error:Incorrect register '%ecx' used with 'q' suffix
+	可见编译器为寄存器约束符选择32位寄存器而非64位
 */
 
 static char * number(char * str, long num, int base, int size, int precision ,int type);

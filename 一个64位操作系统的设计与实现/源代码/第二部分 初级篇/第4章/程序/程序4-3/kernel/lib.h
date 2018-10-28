@@ -305,8 +305,8 @@ inline int strncmp(char * FirstPart,char * SecondPart,long Count)
 
 */
 
-inline int strlen(char * String)
-{
+inline int strlen(char * String)//先将AL寄存器赋值为0,随后借助scasb指令逐字节扫描String字符串,每次扫描都会与AL寄存器进行比对,并根据比对结果置位相应标志位
+{//如果扫描的数值与AL的数值相等,ZF标志被置位,代码repne会一直重复执行scasb指令,直至ECX递减为0或ZF标志位被置位,又因为ECX的初始值是负数0xFFFF FFFF,repne指令执行结束后,ECX依然是负数,使用负值可统计出扫描次数,对ECX取反减1后得到字符串长度
 	register int __res;
 	__asm__	__volatile__	(	"cld	\n\t"
 					"repne	\n\t"
@@ -319,7 +319,7 @@ inline int strlen(char * String)
 				);
 	return __res;
 }
-
+//D表示寄存器edi,通用约束0～9:此约束只用在input部分,但表示可与output和input中第n个操作数用相同的寄存器或内存 
 /*
 
 */

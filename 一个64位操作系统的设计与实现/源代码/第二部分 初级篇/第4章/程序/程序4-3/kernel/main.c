@@ -20,7 +20,7 @@ void Start_Kernel(void)
 {
 	int *addr = (int *)0xffff800000a00000;
 	int i;
-
+//配置屏幕的分辨率/字符矩阵的尺寸/帧缓冲区起始线性地址/缓冲区长度
 	Pos.XResolution = 1440;
 	Pos.YResolution = 900;
 
