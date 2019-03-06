@@ -320,27 +320,15 @@ inline int strlen(char * String)
 	return __res;
 }
 
-/*
-
-*/
-
 inline unsigned long bit_set(unsigned long * addr,unsigned long nr)
 {
 	return *addr | (1UL << nr);
 }
 
-/*
-
-*/
-
 inline unsigned long bit_get(unsigned long * addr,unsigned long nr)
 {
 	return	*addr & (1UL << nr);
 }
-
-/*
-
-*/
 
 inline unsigned long bit_clean(unsigned long * addr,unsigned long nr)
 {

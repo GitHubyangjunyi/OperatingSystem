@@ -18,11 +18,6 @@
 #include "lib.h"
 #include "linkage.h"
 
-
-/*
-
-*/
-
 void putchar(unsigned int * fb,int Xsize,int x,int y,unsigned int FRcolor,unsigned int BKcolor,unsigned char font)
 {
 	int i = 0,j = 0;
@@ -49,9 +44,6 @@ void putchar(unsigned int * fb,int Xsize,int x,int y,unsigned int FRcolor,unsign
 }
 
 
-/*
-
-*/
 
 int skip_atoi(const char **s)//(只能)负责将数值字母转换成整数值
 {
@@ -62,9 +54,6 @@ int skip_atoi(const char **s)//(只能)负责将数值字母转换成整数值
 	return i;
 }
 
-/*
-
-*/
 
 static char * number(char * str, long num, int base, int size, int precision,	int type)//用于将长整型变量值转换成指定进制规格的字符串,参数base指定进制数,参数precision提供显示精度值
 {//不管number函数将整数值转换成大写还是小写字母,它最高支持36进制的数值转换
@@ -120,10 +109,6 @@ static char * number(char * str, long num, int base, int size, int precision,	in
 	return str;
 }
 
-
-/*
-
-*/
 
 int vsprintf(char * buf,const char *fmt, va_list args)//用于解析color_printk函数所提供的格式化字符串及其参数,vsprintf函数会将格式化后的字符串结果保存到一个4096B的缓冲区中buf,并返回字符串长度
 {
@@ -309,10 +294,6 @@ int vsprintf(char * buf,const char *fmt, va_list args)//用于解析color_printk
 	return str - buf;
 }
 
-/*
-
-*/
-
 int color_printk(unsigned int FRcolor,unsigned int BKcolor,const char * fmt,...)
 {
 	int i = 0;
@@ -320,9 +301,7 @@ int color_printk(unsigned int FRcolor,unsigned int BKcolor,const char * fmt,...)
 	int line = 0;
 	va_list args;//定义参数列表
 	va_start(args, fmt);//使args指向第一个可变参数的地址
-
 	i = vsprintf(buf,fmt, args);
-
 	va_end(args);//关闭参数
 
 	for(count = 0;count < i || line;count++)

@@ -16,32 +16,32 @@
 #ifndef __LIB_H__
 #define __LIB_H__
 
-
 #define NULL 0
 
+//内核第一宏
+//传给某个函数的参数是某个结构体的成员变量,然后在这个函数中可能还会用到此结构体的其它成员变量,那这个时候怎么办呢?
+//container_of就是干这个的,通过它我们可以首先找到结构体的首地址,然后再通过结构体的成员访问就可以访问其它成员变量了
 #define container_of(ptr,type,member)							\
 ({											\
 	typeof(((type *)0)->member) * p = (ptr);					\
 	(type *)((unsigned long)p - (unsigned long)&(((type *)0)->member));		\
 })
 
-
 #define sti() 		__asm__ __volatile__ ("sti	\n\t":::"memory")
 #define cli()	 	__asm__ __volatile__ ("cli	\n\t":::"memory")
 #define nop() 		__asm__ __volatile__ ("nop	\n\t")
-#define io_mfence() 	__asm__ __volatile__ ("mfence	\n\t":::"memory")
+#define io_mfence() __asm__ __volatile__ ("mfence	\n\t":::"memory")
 
-
-struct List
+struct List//双向链表的结点定义,至于为什么没有数据域是因为这个结点只是为了链接各个结构体,无需数据域
 {
-	struct List * prev;
-	struct List * next;
+	struct List * prev;//前驱
+	struct List * next;//后继
 };
 
-inline void list_init(struct List * list)
+inline void list_init(struct List * list)//初始化双向链表一个结点
 {
-	list->prev = list;
-	list->next = list;
+	list->prev = list;//结点的前驱指向自己
+	list->next = list;//结点的后继指向自己
 }
 
 inline void list_add_to_behind(struct List * entry,struct List * new)	////add to entry behind
@@ -90,10 +90,7 @@ inline struct List * list_next(struct List * entry)
 		return NULL;
 }
 
-/*
-		From => To memory copy Num bytes
-*/
-
+//From => To memory copy Num bytes
 inline void * memcpy(void *From,void * To,long Num)
 {
 	int d0,d1,d2;
@@ -117,12 +114,9 @@ inline void * memcpy(void *From,void * To,long Num)
 	return To;
 }
 
-/*
-		FirstPart = SecondPart		=>	 0
-		FirstPart > SecondPart		=>	 1
-		FirstPart < SecondPart		=>	-1
-*/
-
+//FirstPart = SecondPart		=>	 0
+//FirstPart > SecondPart		=>	 1
+//FirstPart < SecondPart		=>	-1
 inline int memcmp(void * FirstPart,void * SecondPart,long Count)
 {
 	register int __res;
@@ -142,10 +136,7 @@ inline int memcmp(void * FirstPart,void * SecondPart,long Count)
 	return __res;
 }
 
-/*
-		set memory at Address with C ,number is Count
-*/
-
+//set memory at Address with C ,number is Count
 inline void * memset(void * Address,unsigned char C,long Count)
 {
 	int d0,d1;
@@ -170,10 +161,7 @@ inline void * memset(void * Address,unsigned char C,long Count)
 	return Address;
 }
 
-/*
-		string copy
-*/
-
+//string copy
 inline char * strcpy(char * Dest,char * Src)
 {
 	__asm__	__volatile__	(	"cld	\n\t"
@@ -190,10 +178,7 @@ inline char * strcpy(char * Dest,char * Src)
 	return 	Dest;
 }
 
-/*
-		string copy number bytes
-*/
-
+//string copy number bytes
 inline char * strncpy(char * Dest,char * Src,long Count)
 {
 	__asm__	__volatile__	(	"cld	\n\t"
@@ -214,10 +199,7 @@ inline char * strncpy(char * Dest,char * Src,long Count)
 	return Dest;
 }
 
-/*
-		string cat Dest + Src
-*/
-
+//string cat Dest + Src
 inline char * strcat(char * Dest,char * Src)
 {
 	__asm__	__volatile__	(	"cld	\n\t"
@@ -236,13 +218,10 @@ inline char * strcat(char * Dest,char * Src)
 	return Dest;
 }
 
-/*
-		string compare FirstPart and SecondPart
-		FirstPart = SecondPart =>  0
-		FirstPart > SecondPart =>  1
-		FirstPart < SecondPart => -1
-*/
-
+//string compare FirstPart and SecondPart
+//FirstPart = SecondPart =>  0
+//FirstPart > SecondPart =>  1
+//FirstPart < SecondPart => -1
 inline int strcmp(char * FirstPart,char * SecondPart)
 {
 	register int __res;
@@ -267,13 +246,11 @@ inline int strcmp(char * FirstPart,char * SecondPart)
 	return __res;
 }
 
-/*
-		string compare FirstPart and SecondPart with Count Bytes
-		FirstPart = SecondPart =>  0
-		FirstPart > SecondPart =>  1
-		FirstPart < SecondPart => -1
-*/
 
+//string compare FirstPart and SecondPart with Count Bytes
+//FirstPart = SecondPart =>  0
+//FirstPart > SecondPart =>  1
+//FirstPart < SecondPart => -1
 inline int strncmp(char * FirstPart,char * SecondPart,long Count)
 {	
 	register int __res;
@@ -301,10 +278,6 @@ inline int strncmp(char * FirstPart,char * SecondPart,long Count)
 	return __res;
 }
 
-/*
-
-*/
-
 inline int strlen(char * String)//先将AL寄存器赋值为0,随后借助scasb指令逐字节扫描String字符串,每次扫描都会与AL寄存器进行比对,并根据比对结果置位相应标志位
 {//如果扫描的数值与AL的数值相等,ZF标志被置位,代码repne会一直重复执行scasb指令,直至ECX递减为0或ZF标志位被置位,又因为ECX的初始值是负数0xFFFF FFFF,repne指令执行结束后,ECX依然是负数,使用负值可统计出扫描次数,对ECX取反减1后得到字符串长度
 	register int __res;
@@ -317,39 +290,23 @@ inline int strlen(char * String)//先将AL寄存器赋值为0,随后借助scasb�
 					:"D"(String),"a"(0),"0"(0xffffffff)
 					:
 				);
-	return __res;
+	return __res;//D表示寄存器edi,通用约束0～9:此约束只用在input部分,但表示可与output和input中第n个操作数用相同的寄存器或内存 
 }
-//D表示寄存器edi,通用约束0～9:此约束只用在input部分,但表示可与output和input中第n个操作数用相同的寄存器或内存 
-/*
-
-*/
 
 inline unsigned long bit_set(unsigned long * addr,unsigned long nr)
 {
 	return *addr | (1UL << nr);
 }
 
-/*
-
-*/
-
 inline unsigned long bit_get(unsigned long * addr,unsigned long nr)
 {
 	return	*addr & (1UL << nr);
 }
 
-/*
-
-*/
-
 inline unsigned long bit_clean(unsigned long * addr,unsigned long nr)
 {
 	return	*addr & (~(1UL << nr));
 }
-
-/*
-
-*/
 
 inline unsigned char io_in8(unsigned short port)
 {
@@ -362,10 +319,6 @@ inline unsigned char io_in8(unsigned short port)
 	return ret;
 }
 
-/*
-
-*/
-
 inline unsigned int io_in32(unsigned short port)
 {
 	unsigned int ret = 0;
@@ -377,10 +330,6 @@ inline unsigned int io_in32(unsigned short port)
 	return ret;
 }
 
-/*
-
-*/
-
 inline void io_out8(unsigned short port,unsigned char value)
 {
 	__asm__ __volatile__(	"outb	%0,	%%dx	\n\t"
@@ -390,10 +339,6 @@ inline void io_out8(unsigned short port,unsigned char value)
 				:"memory");
 }
 
-/*
-
-*/
-
 inline void io_out32(unsigned short port,unsigned int value)
 {
 	__asm__ __volatile__(	"outl	%0,	%%dx	\n\t"
@@ -402,10 +347,6 @@ inline void io_out32(unsigned short port,unsigned int value)
 				:"a"(value),"d"(port)
 				:"memory");
 }
-
-/*
-
-*/
 
 #define port_insw(port,buffer,nr)	\
 __asm__ __volatile__("cld;rep;insw;mfence;"::"d"(port),"D"(buffer),"c"(nr):"memory")

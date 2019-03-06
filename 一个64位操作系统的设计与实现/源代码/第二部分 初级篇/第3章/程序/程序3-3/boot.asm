@@ -233,7 +233,7 @@ Label_Go_On_Reading:
 ;=======	get FAT Entry
 
 Func_GetFATEntry:
-;功能:根据当前FAT表项索引出下一个FAT表项,AH=FAT表项号(输入参数/输出参数)
+;功能:根据当前FAT表项索引出下一个FAT表项,AX=FAT表项号(输入参数/输出参数)
 	push	es	;这段程序首先会保存FAT表项号,并将奇偶标志变量(odd)置0,因为每个FAT表项占用1.5B,所以将FAT表项乘以3除去2,来判断余数的奇偶性并保存在[odd]中
 	push	bx	;再将计算结果除以每扇区字节数,商值为FAT表项的偏移扇区号,余数值为FAT表项在扇区中的偏移位置
 	push	ax	;接着通过Func_ReadOneSector模块连续读入两个扇区的数据,目的是为了解决FAT表项横跨两个扇区的问题,最后根据奇偶标志变量进一步处理奇偶项错位问题,即奇数项向右移动4位

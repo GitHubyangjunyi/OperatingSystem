@@ -16,7 +16,6 @@
 #ifndef __LIB_H__
 #define __LIB_H__
 
-
 #define NULL 0
 
 #define container_of(ptr,type,member)							\
@@ -25,12 +24,14 @@
 	(type *)((unsigned long)p - (unsigned long)&(((type *)0)->member));		\
 })
 
-
+//开启中断
 #define sti() 		__asm__ __volatile__ ("sti	\n\t":::"memory")
+//关闭中断
 #define cli()	 	__asm__ __volatile__ ("cli	\n\t":::"memory")
+//填充指令
 #define nop() 		__asm__ __volatile__ ("nop	\n\t")
+//内存屏障
 #define io_mfence() 	__asm__ __volatile__ ("mfence	\n\t":::"memory")
-
 
 struct List
 {
@@ -44,7 +45,7 @@ inline void list_init(struct List * list)
 	list->next = list;
 }
 
-inline void list_add_to_behind(struct List * entry,struct List * new)	////add to entry behind
+inline void list_add_to_behind(struct List * entry,struct List * new)
 {
 	new->next = entry->next;
 	new->prev = entry;
@@ -52,7 +53,7 @@ inline void list_add_to_behind(struct List * entry,struct List * new)	////add to
 	entry->next = new;
 }
 
-inline void list_add_to_before(struct List * entry,struct List * new)	////add to entry behind
+inline void list_add_to_before(struct List * entry,struct List * new)
 {
 	new->next = entry;
 	entry->prev->next = new;
@@ -301,10 +302,6 @@ inline int strncmp(char * FirstPart,char * SecondPart,long Count)
 	return __res;
 }
 
-/*
-
-*/
-
 inline int strlen(char * String)
 {
 	register int __res;
@@ -320,36 +317,20 @@ inline int strlen(char * String)
 	return __res;
 }
 
-/*
-
-*/
-
 inline unsigned long bit_set(unsigned long * addr,unsigned long nr)
 {
 	return *addr | (1UL << nr);
 }
-
-/*
-
-*/
 
 inline unsigned long bit_get(unsigned long * addr,unsigned long nr)
 {
 	return	*addr & (1UL << nr);
 }
 
-/*
-
-*/
-
 inline unsigned long bit_clean(unsigned long * addr,unsigned long nr)
 {
 	return	*addr & (~(1UL << nr));
 }
-
-/*
-
-*/
 
 inline unsigned char io_in8(unsigned short port)
 {
@@ -362,10 +343,6 @@ inline unsigned char io_in8(unsigned short port)
 	return ret;
 }
 
-/*
-
-*/
-
 inline unsigned int io_in32(unsigned short port)
 {
 	unsigned int ret = 0;
@@ -377,10 +354,6 @@ inline unsigned int io_in32(unsigned short port)
 	return ret;
 }
 
-/*
-
-*/
-
 inline void io_out8(unsigned short port,unsigned char value)
 {
 	__asm__ __volatile__(	"outb	%0,	%%dx	\n\t"
@@ -390,10 +363,6 @@ inline void io_out8(unsigned short port,unsigned char value)
 				:"memory");
 }
 
-/*
-
-*/
-
 inline void io_out32(unsigned short port,unsigned int value)
 {
 	__asm__ __volatile__(	"outl	%0,	%%dx	\n\t"
@@ -402,10 +371,6 @@ inline void io_out32(unsigned short port,unsigned int value)
 				:"a"(value),"d"(port)
 				:"memory");
 }
-
-/*
-
-*/
 
 #define port_insw(port,buffer,nr)	\
 __asm__ __volatile__("cld;rep;insw;mfence;"::"d"(port),"D"(buffer),"c"(nr):"memory")

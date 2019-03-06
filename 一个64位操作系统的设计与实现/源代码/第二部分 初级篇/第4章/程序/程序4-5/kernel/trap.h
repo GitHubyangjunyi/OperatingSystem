@@ -21,10 +21,6 @@
 #include "printk.h"
 #include "lib.h"
 
-/*
-
-*/
-
  void divide_error();
  void debug();
  void nmi();
@@ -46,13 +42,6 @@
  void SIMD_exception();
  void virtualization_exception();
 
-
-
-/*
-
-*/
-
 void sys_vector_init();
-
 
 #endif

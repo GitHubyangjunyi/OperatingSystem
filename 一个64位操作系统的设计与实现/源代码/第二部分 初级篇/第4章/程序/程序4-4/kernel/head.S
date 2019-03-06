@@ -265,8 +265,6 @@ TSS64_Table:
 	.fill  13,8,0
 TSS64_END:
 
-
 TSS64_POINTER:
 TSS64_LIMIT:	.word	TSS64_END - TSS64_Table - 1
 TSS64_BASE:	.quad	TSS64_Table
-

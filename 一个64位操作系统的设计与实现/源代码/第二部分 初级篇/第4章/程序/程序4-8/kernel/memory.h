@@ -22,10 +22,6 @@
 //	8Bytes per cell
 #define PTRS_PER_PAGE	512
 
-/*
-
-*/
-
 #define PAGE_OFFSET	((unsigned long)0xffff800000000000)
 
 #define PAGE_GDT_SHIFT	39
@@ -47,7 +43,6 @@
 
 #define Virt_To_2M_Page(kaddr)	(memory_management_struct.pages_struct + (Virt_To_Phy(kaddr) >> PAGE_2M_SHIFT))
 #define Phy_to_2M_Page(kaddr)	(memory_management_struct.pages_struct + ((unsigned long)(kaddr) >> PAGE_2M_SHIFT))
-
 
 ////page table attribute
 
@@ -99,29 +94,21 @@
 //7,2,1,0
 #define	PAGE_USER_Page		(PAGE_PS  | PAGE_U_S | PAGE_R_W | PAGE_Present)
 
-/*
-
-*/
-
 typedef struct {unsigned long pml4t;} pml4t_t;
 #define	mk_mpl4t(addr,attr)	((unsigned long)(addr) | (unsigned long)(attr))
 #define set_mpl4t(mpl4tptr,mpl4tval)	(*(mpl4tptr) = (mpl4tval))
-
 
 typedef struct {unsigned long pdpt;} pdpt_t;
 #define mk_pdpt(addr,attr)	((unsigned long)(addr) | (unsigned long)(attr))
 #define set_pdpt(pdptptr,pdptval)	(*(pdptptr) = (pdptval))
 
-
 typedef struct {unsigned long pdt;} pdt_t;
 #define mk_pdt(addr,attr)	((unsigned long)(addr) | (unsigned long)(attr))
 #define set_pdt(pdtptr,pdtval)		(*(pdtptr) = (pdtval))
 
-
 typedef struct {unsigned long pt;} pt_t;
 #define mk_pt(addr,attr)	((unsigned long)(addr) | (unsigned long)(attr))
 #define set_pt(ptptr,ptval)		(*(ptptr) = (ptval))
-
 
 unsigned long * Global_CR3 = NULL;
 
@@ -132,31 +119,26 @@ struct E820
 	unsigned int	type;
 }__attribute__((packed));
 
-
-/*
-
-*/
-
 struct Global_Memory_Descriptor
 {
-	struct E820 	e820[32];
-	unsigned long 	e820_length;
+	struct E820 	e820[32];//物理内存段结构数组
+	unsigned long 	e820_length;//物理内存段结构数组长度
 
-	unsigned long * bits_map;
-	unsigned long 	bits_size;
-	unsigned long   bits_length;
+	unsigned long * bits_map;//物理地址空间页映射位图
+	unsigned long 	bits_size;//物理地址空间页数量
+	unsigned long   bits_length;//物理地址空间页映射位图长度
 
-	struct Page *	pages_struct;
-	unsigned long	pages_size;
-	unsigned long 	pages_length;
+	struct Page *	pages_struct;//指向全局struct page结构体数组的指针
+	unsigned long	pages_size;//struct page结构体总数
+	unsigned long 	pages_length;//struct page结构体长度
 
-	struct Zone * 	zones_struct;
-	unsigned long	zones_size;
-	unsigned long 	zones_length;
+	struct Zone * 	zones_struct;//指向全局struct zone结构体数组的指针
+	unsigned long	zones_size;//struct zone结构体数量
+	unsigned long 	zones_length;//struct zone结构体数组长度
 
-	unsigned long 	start_code , end_code , end_data , end_brk;
+	unsigned long 	start_code , end_code , end_data , end_brk;//start_code内核程序的起始代码段地址/end_code内核程序的结束代码段地址/end_data内核程序的结束数据段地址/end_brk内核程序的结束地址
 
-	unsigned long	end_of_struct;	
+	unsigned long	end_of_struct;//内存页管理机构的结尾地址
 };
 
 ////alloc_pages zone_select
@@ -204,15 +186,16 @@ struct Global_Memory_Descriptor
 
 struct Page
 {
-	struct Zone *	zone_struct;
-	unsigned long	PHY_address;
-	unsigned long	attribute;
+	//前两个属性可通过计算获得,此处添加这两个成员是为了节省计算时间(空间换时间)
+	struct Zone *	zone_struct;//指向本页所属的区域结构体
+	unsigned long	PHY_address;//页的物理地址
 
-	unsigned long	reference_count;
+	unsigned long	attribute;//页的属性(页的映射状态/活动状态/使用者等)
+
+	unsigned long	reference_count;//该页的引用次数
 	
-	unsigned long	age;
+	unsigned long	age;//该页的创建时间
 };
-
 
 //// each zone index
 
@@ -222,49 +205,40 @@ int ZONE_UNMAPED_INDEX	= 0;	//above 1GB RAM,unmapped in pagetable
 
 #define MAX_NR_ZONES	10	//max zone
 
-/*
-
-*/
-
 struct Zone
 {
-	struct Page * 	pages_group;
-	unsigned long	pages_length;
+	struct Page * 	pages_group;//struct Page结构体数组指针
+	unsigned long	pages_length;//本区域包含struct Page结构体数量
 	
-	unsigned long	zone_start_address;
-	unsigned long	zone_end_address;
-	unsigned long	zone_length;
-	unsigned long	attribute;
+	unsigned long	zone_start_address;//本区域的起始页对齐地址
+	unsigned long	zone_end_address;//本区域的结束页对齐地址
+	unsigned long	zone_length;//本区域经过页对齐后的地址长度
+	unsigned long	attribute;//本区域空间的属性
 
-	struct Global_Memory_Descriptor * GMD_struct;
+	struct Global_Memory_Descriptor * GMD_struct;//指向全局结构体Global_Memory_Descriptor
 
-	unsigned long	page_using_count;
-	unsigned long	page_free_count;
+	unsigned long	page_using_count;//本区域已使用物理内存页数量
+	unsigned long	page_free_count;//本区域空闲物理内存页数量
 
-	unsigned long	total_pages_link;
+	unsigned long	total_pages_link;//本区域物理页被引用次数,因为物理页在页表中的映射可以是一对多的关系,同时映射到线性地址空间的多个位置上
+	//所以total_pages_link和page_using_count在数值上不一定相等
 };
-
 
 extern struct Global_Memory_Descriptor memory_management_struct;
 
-unsigned long page_init(struct Page * page,unsigned long flags);
+unsigned long page_init(struct Page * page, unsigned long flags);
 
 unsigned long page_clean(struct Page * page);
 
 void init_memory();
 
-struct Page * alloc_pages(int zone_select,int number,unsigned long page_flags);
+struct Page * alloc_pages(int zone_select, int number, unsigned long page_flags);
 
-/*
-
-*/
-
+//invlpg指令使与所指向的内存关联的页的TLB无效
 #define	flush_tlb_one(addr)	\
 	__asm__ __volatile__	("invlpg	(%0)	\n\t"::"r"(addr):"memory")
-/*
 
-*/
-
+//刷新TLB使更改后的页表生效(重新赋值CR3)
 #define flush_tlb()						\
 do								\
 {								\
@@ -278,10 +252,7 @@ do								\
 				);				\
 }while(0)
 
-/*
-
-*/
-
+//获得CR3控制寄存器里的页目录物理机地址
 inline unsigned long * Get_gdt()
 {
 	unsigned long * tmp;
@@ -293,6 +264,5 @@ inline unsigned long * Get_gdt()
 				);
 	return tmp;
 }
-
 
 #endif

@@ -1,24 +1,5 @@
-/***************************************************
-*		版权声明
-*
-*	本操作系统名为：MINE
-*	该操作系统未经授权不得以盈利或非盈利为目的进行开发，
-*	只允许个人学习以及公开交流使用
-*
-*	代码最终所有权及解释权归田宇所有；
-*
-*	本模块作者：	田宇
-*	EMail:		345538255@qq.com
-*
-*
-***************************************************/
-
 #include "trap.h"
 #include "gate.h"
-
-/*
-
-*/
 
 void do_divide_error(unsigned long rsp,unsigned long error_code)
 {
@@ -28,10 +9,6 @@ void do_divide_error(unsigned long rsp,unsigned long error_code)
 	while(1);
 }
 
-/*
-
-*/
-
 void do_debug(unsigned long rsp,unsigned long error_code)
 {
 	unsigned long * p = NULL;
@@ -39,10 +16,6 @@ void do_debug(unsigned long rsp,unsigned long error_code)
 	color_printk(RED,BLACK,"do_debug(1),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code , rsp , *p);
 	while(1);
 }
-
-/*
-
-*/
 
 void do_nmi(unsigned long rsp,unsigned long error_code)
 {
@@ -52,10 +25,6 @@ void do_nmi(unsigned long rsp,unsigned long error_code)
 	while(1);
 }
 
-/*
-
-*/
-
 void do_int3(unsigned long rsp,unsigned long error_code)
 {
 	unsigned long * p = NULL;
@@ -63,10 +32,6 @@ void do_int3(unsigned long rsp,unsigned long error_code)
 	color_printk(RED,BLACK,"do_int3(3),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code , rsp , *p);
 	while(1);
 }
-
-/*
-
-*/
 
 void do_overflow(unsigned long rsp,unsigned long error_code)
 {
@@ -76,10 +41,6 @@ void do_overflow(unsigned long rsp,unsigned long error_code)
 	while(1);
 }
 
-/*
-
-*/
-
 void do_bounds(unsigned long rsp,unsigned long error_code)
 {
 	unsigned long * p = NULL;
@@ -87,10 +48,6 @@ void do_bounds(unsigned long rsp,unsigned long error_code)
 	color_printk(RED,BLACK,"do_bounds(5),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code , rsp , *p);
 	while(1);
 }
-
-/*
-
-*/
 
 void do_undefined_opcode(unsigned long rsp,unsigned long error_code)
 {
@@ -100,10 +57,6 @@ void do_undefined_opcode(unsigned long rsp,unsigned long error_code)
 	while(1);
 }
 
-/*
-
-*/
-
 void do_dev_not_available(unsigned long rsp,unsigned long error_code)
 {
 	unsigned long * p = NULL;
@@ -111,10 +64,6 @@ void do_dev_not_available(unsigned long rsp,unsigned long error_code)
 	color_printk(RED,BLACK,"do_dev_not_available(7),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code , rsp , *p);
 	while(1);
 }
-
-/*
-
-*/
 
 void do_double_fault(unsigned long rsp,unsigned long error_code)
 {
@@ -124,10 +73,6 @@ void do_double_fault(unsigned long rsp,unsigned long error_code)
 	while(1);
 }
 
-/*
-
-*/
-
 void do_coprocessor_segment_overrun(unsigned long rsp,unsigned long error_code)
 {
 	unsigned long * p = NULL;
@@ -135,10 +80,6 @@ void do_coprocessor_segment_overrun(unsigned long rsp,unsigned long error_code)
 	color_printk(RED,BLACK,"do_coprocessor_segment_overrun(9),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code , rsp , *p);
 	while(1);
 }
-
-/*
-
-*/
 
 void do_invalid_TSS(unsigned long rsp,unsigned long error_code)
 {
@@ -165,10 +106,6 @@ void do_invalid_TSS(unsigned long rsp,unsigned long error_code)
 	while(1);
 }
 
-/*
-
-*/
-
 void do_segment_not_present(unsigned long rsp,unsigned long error_code)
 {
 	unsigned long * p = NULL;
@@ -193,10 +130,6 @@ void do_segment_not_present(unsigned long rsp,unsigned long error_code)
 
 	while(1);
 }
-
-/*
-
-*/
 
 void do_stack_segment_fault(unsigned long rsp,unsigned long error_code)
 {
@@ -223,10 +156,6 @@ void do_stack_segment_fault(unsigned long rsp,unsigned long error_code)
 	while(1);
 }
 
-/*
-
-*/
-
 void do_general_protection(unsigned long rsp,unsigned long error_code)
 {
 	unsigned long * p = NULL;
@@ -251,10 +180,6 @@ void do_general_protection(unsigned long rsp,unsigned long error_code)
 
 	while(1);
 }
-
-/*
-
-*/
 
 void do_page_fault(unsigned long rsp,unsigned long error_code)
 {
@@ -292,10 +217,6 @@ void do_page_fault(unsigned long rsp,unsigned long error_code)
 	while(1);
 }
 
-/*
-
-*/
-
 void do_x87_FPU_error(unsigned long rsp,unsigned long error_code)
 {
 	unsigned long * p = NULL;
@@ -303,10 +224,6 @@ void do_x87_FPU_error(unsigned long rsp,unsigned long error_code)
 	color_printk(RED,BLACK,"do_x87_FPU_error(16),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code , rsp , *p);
 	while(1);
 }
-
-/*
-
-*/
 
 void do_alignment_check(unsigned long rsp,unsigned long error_code)
 {
@@ -316,10 +233,6 @@ void do_alignment_check(unsigned long rsp,unsigned long error_code)
 	while(1);
 }
 
-/*
-
-*/
-
 void do_machine_check(unsigned long rsp,unsigned long error_code)
 {
 	unsigned long * p = NULL;
@@ -327,10 +240,6 @@ void do_machine_check(unsigned long rsp,unsigned long error_code)
 	color_printk(RED,BLACK,"do_machine_check(18),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code , rsp , *p);
 	while(1);
 }
-
-/*
-
-*/
 
 void do_SIMD_exception(unsigned long rsp,unsigned long error_code)
 {
@@ -340,10 +249,6 @@ void do_SIMD_exception(unsigned long rsp,unsigned long error_code)
 	while(1);
 }
 
-/*
-
-*/
-
 void do_virtualization_exception(unsigned long rsp,unsigned long error_code)
 {
 	unsigned long * p = NULL;
@@ -352,10 +257,9 @@ void do_virtualization_exception(unsigned long rsp,unsigned long error_code)
 	while(1);
 }
 
-/*
-
-*/
-
+//初始化IDT
+//各个异常的描述符定义,这段程序为各个异常向量配置了处理函数和栈指针,此处使用64位TSS里的IST1区域来记录栈基地址
+//函数set_trap_gate/set_intr_gate/set_system_gate分别用于初始化IDT内的各个表项,这些函数会根据异常的功能,把描述符配置为DPL=0的中断门和陷阱门,或者DPL=3的陷阱们
 void sys_vector_init()
 {
 	set_trap_gate(0,1,divide_error);
@@ -383,4 +287,3 @@ void sys_vector_init()
 	//set_system_gate(SYSTEM_CALL_VECTOR,7,system_call);
 
 }
-
