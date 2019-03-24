@@ -1,0 +1,11 @@
+{
+    "git.ignoreLimitWarning": true,
+    "files.associations": {
+        "linkage.h": "c",
+        "interrupt.h": "c",
+        "memory.h": "c",
+        "printk.h": "c",
+        "trap.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
+}
