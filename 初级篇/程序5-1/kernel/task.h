@@ -1,20 +1,4 @@
-/***************************************************
-*		版权声明
-*
-*	本操作系统名为：MINE
-*	该操作系统未经授权不得以盈利或非盈利为目的进行开发，
-*	只允许个人学习以及公开交流使用
-*
-*	代码最终所有权及解释权归田宇所有；
-*
-*	本模块作者：	田宇
-*	EMail:		345538255@qq.com
-*
-*
-***************************************************/
-
 #ifndef __TASK_H__
-
 #define __TASK_H__
 
 #include "memory.h"
@@ -47,20 +31,11 @@ extern char _end;
 
 extern unsigned long _stack_start;
 
-/*
-
-*/
-
 #define TASK_RUNNING		(1 << 0)
 #define TASK_INTERRUPTIBLE	(1 << 1)
 #define	TASK_UNINTERRUPTIBLE	(1 << 2)
 #define	TASK_ZOMBIE		(1 << 3)	
 #define	TASK_STOPPED		(1 << 4)
-
-/*
-
-*/
-
 
 struct mm_struct
 {
@@ -72,10 +47,6 @@ struct mm_struct
 	unsigned long start_brk,end_brk;
 	unsigned long start_stack;	
 };
-
-/*
-
-*/
 
 struct thread_struct
 {
@@ -91,10 +62,6 @@ struct thread_struct
 	unsigned long trap_nr;
 	unsigned long error_code;
 };
-
-/*
-
-*/
 
 #define PF_KTHREAD	(1 << 0)
 
@@ -158,10 +125,6 @@ struct thread_struct init_thread =
 	.error_code = 0
 };
 
-/*
-
-*/
-
 struct tss_struct
 {
 	unsigned int  reserved0;
@@ -201,11 +164,6 @@ struct tss_struct
 
 struct tss_struct init_tss[NR_CPUS] = { [0 ... NR_CPUS-1] = INIT_TSS };
 
-/*
-
-*/
-
-
 inline	struct task_struct * get_current()
 {
 	struct task_struct * current = NULL;
@@ -218,11 +176,6 @@ inline	struct task_struct * get_current()
 #define GET_CURRENT			\
 	"movq	%rsp,	%rbx	\n\t"	\
 	"andq	$-32768,%rbx	\n\t"
-
-/*
-
-*/
-
 
 #define switch_to(prev,next)			\
 do{							\
@@ -242,10 +195,6 @@ do{							\
 				:"memory"		\
 				);			\
 }while(0)
-
-/*
-
-*/
 
 unsigned long do_fork(struct pt_regs * regs, unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size);
 void task_init();

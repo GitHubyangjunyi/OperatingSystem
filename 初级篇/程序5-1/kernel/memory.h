@@ -1,18 +1,3 @@
-/***************************************************
-*		版权声明
-*
-*	本操作系统名为：MINE
-*	该操作系统未经授权不得以盈利或非盈利为目的进行开发，
-*	只允许个人学习以及公开交流使用
-*
-*	代码最终所有权及解释权归田宇所有；
-*
-*	本模块作者：	田宇
-*	EMail:		345538255@qq.com
-*
-*
-***************************************************/
-
 #ifndef __MEMORY_H__
 #define __MEMORY_H__
 
@@ -21,10 +6,6 @@
 
 //	8Bytes per cell
 #define PTRS_PER_PAGE	512
-
-/*
-
-*/
 
 #define PAGE_OFFSET	((unsigned long)0xffff800000000000)
 
@@ -99,9 +80,6 @@
 //7,2,1,0
 #define	PAGE_USER_Page		(PAGE_PS  | PAGE_U_S | PAGE_R_W | PAGE_Present)
 
-/*
-
-*/
 
 typedef struct {unsigned long pml4t;} pml4t_t;
 #define	mk_mpl4t(addr,attr)	((unsigned long)(addr) | (unsigned long)(attr))
@@ -131,11 +109,6 @@ struct E820
 	unsigned long length;
 	unsigned int	type;
 }__attribute__((packed));
-
-
-/*
-
-*/
 
 struct Global_Memory_Descriptor
 {
@@ -222,10 +195,6 @@ int ZONE_UNMAPED_INDEX	= 0;	//above 1GB RAM,unmapped in pagetable
 
 #define MAX_NR_ZONES	10	//max zone
 
-/*
-
-*/
-
 struct Zone
 {
 	struct Page * 	pages_group;
@@ -255,15 +224,8 @@ void init_memory();
 
 struct Page * alloc_pages(int zone_select,int number,unsigned long page_flags);
 
-/*
-
-*/
-
 #define	flush_tlb_one(addr)	\
 	__asm__ __volatile__	("invlpg	(%0)	\n\t"::"r"(addr):"memory")
-/*
-
-*/
 
 #define flush_tlb()						\
 do								\
@@ -278,10 +240,6 @@ do								\
 				);				\
 }while(0)
 
-/*
-
-*/
-
 inline unsigned long * Get_gdt()
 {
 	unsigned long * tmp;
@@ -293,6 +251,5 @@ inline unsigned long * Get_gdt()
 				);
 	return tmp;
 }
-
 
 #endif

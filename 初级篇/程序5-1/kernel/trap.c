@@ -1,18 +1,3 @@
-/***************************************************
-*		版权声明
-*
-*	本操作系统名为：MINE
-*	该操作系统未经授权不得以盈利或非盈利为目的进行开发，
-*	只允许个人学习以及公开交流使用
-*
-*	代码最终所有权及解释权归田宇所有；
-*
-*	本模块作者：	田宇
-*	EMail:		345538255@qq.com
-*
-*
-***************************************************/
-
 #include "trap.h"
 #include "gate.h"
 #include "ptrace.h"
@@ -313,10 +298,6 @@ void do_virtualization_exception(struct pt_regs * regs,unsigned long error_code)
 	while(1);
 }
 
-/*
-
-*/
-
 void sys_vector_init()
 {
 	set_trap_gate(0,1,divide_error);
@@ -344,4 +325,3 @@ void sys_vector_init()
 	//set_system_gate(SYSTEM_CALL_VECTOR,7,system_call);
 
 }
-

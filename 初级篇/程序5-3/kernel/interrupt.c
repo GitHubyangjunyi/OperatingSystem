@@ -1,18 +1,3 @@
-/***************************************************
-*		版权声明
-*
-*	本操作系统名为：MINE
-*	该操作系统未经授权不得以盈利或非盈利为目的进行开发，
-*	只允许个人学习以及公开交流使用
-*
-*	代码最终所有权及解释权归田宇所有；
-*
-*	本模块作者：	田宇
-*	EMail:		345538255@qq.com
-*
-*
-***************************************************/
-
 #include "interrupt.h"
 #include "linkage.h"
 #include "lib.h"
@@ -21,9 +6,6 @@
 #include "gate.h"
 #include "ptrace.h"
 
-/*
-
-*/
 
 #define SAVE_ALL				\
 	"cld;			\n\t"		\
@@ -52,16 +34,10 @@
 	"movq	%rdx,	%ds;	\n\t"		\
 	"movq	%rdx,	%es;	\n\t"
 
-/*
-
-*/
 
 #define IRQ_NAME2(nr) nr##_interrupt(void)
 #define IRQ_NAME(nr) IRQ_NAME2(IRQ##nr)
 
-/*
-
-*/
 
 #define Build_IRQ(nr)							\
 void IRQ_NAME(nr);						\
@@ -74,10 +50,6 @@ __asm__ (	SYMBOL_NAME_STR(IRQ)#nr"_interrupt:		\n\t"	\
 			"movq	$"#nr",	%rsi			\n\t"	\
 			"jmp	do_IRQ	\n\t");
 
-
-/*
-
-*/
 
 Build_IRQ(0x20)
 Build_IRQ(0x21)
@@ -104,9 +76,6 @@ Build_IRQ(0x35)
 Build_IRQ(0x36)
 Build_IRQ(0x37)
 
-/*
-
-*/
 
 void (* interrupt[24])(void)=
 {
@@ -165,10 +134,6 @@ void init_interrupt()
 	sti();
 }
 
-/*
-
-*/
-
 void do_IRQ(struct pt_regs * regs,unsigned long nr)	//regs,nr
 {
 	unsigned char x;
@@ -178,5 +143,3 @@ void do_IRQ(struct pt_regs * regs,unsigned long nr)	//regs,nr
 	io_out8(0x20,0x20);
 	color_printk(RED,BLACK,"regs:%#018lx\t<RIP:%#018lx\tRSP:%#018lx>\n",regs,regs->rip,regs->rsp);
 }
-
-

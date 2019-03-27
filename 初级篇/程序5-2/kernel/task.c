@@ -1,18 +1,3 @@
-/***************************************************
-*		版权声明
-*
-*	本操作系统名为：MINE
-*	该操作系统未经授权不得以盈利或非盈利为目的进行开发，
-*	只允许个人学习以及公开交流使用
-*
-*	代码最终所有权及解释权归田宇所有；
-*
-*	本模块作者：	田宇
-*	EMail:		345538255@qq.com
-*
-*
-***************************************************/
-
 #include "task.h"
 #include "ptrace.h"
 #include "printk.h"
@@ -20,11 +5,15 @@
 #include "memory.h"
 #include "linkage.h"
 
-
 extern void ret_system_call(void);
 extern void system_call(void);
 
-
+//现在系统调用的主体框架已基本实现,接下来编写程序执行系统调用API,在编写调用程序时应该要明白sysenter/sysexit指令并不具备保存程序执行环境的功能
+//而sysexit指令的执行却必须要向RCX和RDX提供应用程序的返回地址和栈顶地址,所以在执行sysenter指令前,特地将应用程序的返回地址和栈顶地址保存在这两个寄存器内
+//其中内嵌汇编是系统调用在应用层部分的核心程序,通过LEA取得标识符sysexit_return_address的有效地址,并将有效地址保存到RDX
+//而RCX保存着应用层当前的栈指针,RAX保存着系统调用API向量号,当系统调用处理函数执行结束,系统调用处理函数便借助RAX把执行结果返回到应用层并保存在变量ret中
+//系统调用的第0x0f号向量执行了函数no_system_call,此值正是在执行系统调用时由user_level_function传入到寄存器RAX的数值15
+//当默认系统调用处理函数no_system_call执行结束后,默认系统调用处理函数将向应用层返回数值-1,返回值同样由RAX携带,最终被传递到应用程序的ret变量中
 void user_level_function()
 {
 	long ret = 0;
@@ -126,6 +115,9 @@ unsigned long do_exit(unsigned long code)
 }
 
 
+//system_call_function函数的参数记录着进程的执行环境,RAX保存着系统调用API的向量号,暂时定义128个系统调用
+//数组system_call_table用于保存每个系统调用的处理函数,目前尚未实现任何系统调用功能,因此为每个系统调用配置默认处理函数no_system_call
+//于此同时还要为sysenter汇编指令指定内核层栈指针以及系统调用在内核层的入口地址(system_call模块的起始地址),函数task_init将这两个值分别写到MSR寄存器组的175h和176h处
 unsigned long  system_call_function(struct pt_regs * regs)
 {
 	return system_call_table[regs->rax](regs);
@@ -201,9 +193,6 @@ inline void __switch_to(struct task_struct *prev,struct task_struct *next)
 	color_printk(WHITE,BLACK,"next->thread->rsp0:%#018lx\n",next->thread->rsp0);
 }
 
-/*
-
-*/
 
 void task_init()
 {
@@ -226,7 +215,8 @@ void task_init()
 	init_mm.start_stack = _stack_start;
 	
 	wrmsr(0x174,KERNEL_CS);
-	wrmsr(0x175,current->thread->rsp0);
+	//于此同时还要为sysenter汇编指令指定内核层栈指针以及系统调用在内核层的入口地址(system_call模块的起始地址),函数task_init将这两个值分别写到MSR寄存器组的175h和176h处
+	wrmsr(0x175,current->thread->rsp0);//系统第一个进程的内核栈作为系统调用使用的内核层栈
 	wrmsr(0x176,(unsigned long)system_call);
 	
 //	init_thread,init_tss
@@ -244,4 +234,3 @@ void task_init()
 
 	switch_to(current,p);
 }
-

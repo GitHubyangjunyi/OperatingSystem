@@ -1,25 +1,9 @@
-/***************************************************
-*		版权声明
-*
-*	本操作系统名为：MINE
-*	该操作系统未经授权不得以盈利或非盈利为目的进行开发，
-*	只允许个人学习以及公开交流使用
-*
-*	代码最终所有权及解释权归田宇所有；
-*
-*	本模块作者：	田宇
-*	EMail:		345538255@qq.com
-*
-*
-***************************************************/
-
 #include "task.h"
 #include "ptrace.h"
 #include "printk.h"
 #include "lib.h"
 #include "memory.h"
 #include "linkage.h"
-
 
 extern void ret_system_call(void);
 extern void system_call(void);
@@ -29,7 +13,9 @@ void user_level_function()
 {
 	long ret = 0;
 //	color_printk(RED,BLACK,"user_level_function task is running\n");
-	char string[]="Hello World!\n";
+	char string[]="Hello World!\n";//字符串变量
+	//然后修改系统调用的入口程序,将字符串变量的起始地址保存到RDI
+	//一个字符串打印功能的系统调用API就实现了
 
 	__asm__	__volatile__	(	"leaq	sysexit_return_address(%%rip),	%%rdx	\n\t"
 					"movq	%%rsp,	%%rcx		\n\t"
@@ -202,10 +188,6 @@ inline void __switch_to(struct task_struct *prev,struct task_struct *next)
 	color_printk(WHITE,BLACK,"next->thread->rsp0:%#018lx\n",next->thread->rsp0);
 }
 
-/*
-
-*/
-
 void task_init()
 {
 	struct task_struct *p = NULL;
@@ -245,4 +227,3 @@ void task_init()
 
 	switch_to(current,p);
 }
-

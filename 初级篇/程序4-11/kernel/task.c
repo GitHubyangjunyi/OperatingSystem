@@ -159,7 +159,7 @@ inline void __switch_to(struct task_struct *prev,struct task_struct *next)
 //	.quad	init_task_union + 32768
 //其实全局变量_stack_start保存的数值和init_thread结构体变量中的rsp0是一样的,都指向系统第一个进程的内核层栈基地址,这是精心设计的
 //定义全局变量_stack_start可让内核执行头程序直接使用该进程的内核层栈空间,从而减少栈空间切换带来的隐患
-//通常系统的第一个进程会协助操作系统完成一些初始化任务,该进程会在执行玩初始化任务后进入等待状态,会在系统没有可运行进程时休眠以省电
+//通常系统的第一个进程会协助操作系统完成一些初始化任务,该进程会在执行完初始化任务后进入等待状态,会在系统没有可运行进程时休眠以省电
 //因此系统第一个进程不存在应用层空间,对于这个没有应用层空间的进程而言,其init_mm结构体变量(mm_struct结构体)保存的不再是应用程序信息而是内核程序的各个段信息以及内核层栈基地址
 //接下来task_init函数执行kernel_thread函数为系统创建第二个进程(通常称为init进程),对于调用kernel_thread函数传入的CLONE_FS | CLONE_FILES | CLONE_SIGNAL等克隆标志位,目前未实现相应功能,预留使用
 void task_init()
